@@ -1,12 +1,17 @@
-name: EAS Build (Preview)
+name: OTA Update (Preview)
+
+# Pushes a JS-only over-the-air update to the preview channel on every
+# merge to main. No native rebuild needed — ships in ~3 minutes.
+# If native code changed, fingerprint mismatch will cause devices to
+# fall back to their current build until a new APK is distributed.
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build:
-    name: EAS Preview Build
+  update:
+    name: EAS Update → preview channel
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +31,12 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build Android preview APK
-        run: eas build --platform android --profile preview --non-interactive
+      - name: Publish OTA update
+        run: |
+          eas update \
+            --channel preview \
+            --message "${{ github.event.head_commit.message }}" \
+            --non-interactive
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}

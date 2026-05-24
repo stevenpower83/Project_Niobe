@@ -40,6 +40,14 @@ export default {
         },
       ],
     ],
+    // EAS Update — OTA JS delivery without store releases
+    updates: {
+      url: 'https://u.expo.dev/c419ad97-52fe-4b69-bf76-ef02bb02993f',
+    },
+    // fingerprint: rebuilds only when native code changes; OTA otherwise
+    runtimeVersion: {
+      policy: 'fingerprint',
+    },
     experiments: {
       typedRoutes: true,
       reactCompiler: true,

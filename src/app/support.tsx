@@ -106,7 +106,7 @@ export default function SupportScreen() {
           >
             <Text style={styles.actionBtnText}>📣 Share Your Suffering</Text>
           </Pressable>
-          <Text style={styles.hint}>Tell us what the spirits whisper...</Text>
+          <Text style={styles.hint}>Tell us what the spirits whisper about the app</Text>
         </StyledCard>
 
         {/* Donation */}
@@ -117,7 +117,7 @@ export default function SupportScreen() {
           >
             <Text style={styles.actionBtnText}>🩸 Feed the Developer</Text>
           </Pressable>
-          <Text style={styles.hint}>Keep the dark arts alive...</Text>
+          <Text style={styles.hint}>Keep the dark arts alive with a small donation</Text>
         </StyledCard>
 
         {/* Notifications */}
@@ -139,7 +139,7 @@ export default function SupportScreen() {
 
         {/* Delete account */}
         <Pressable style={styles.deleteBtn} onPress={() => openUrl(DELETE_URL)}>
-          <Text style={styles.deleteText}>Request account deletion</Text>
+          <Text style={styles.deleteText}>Delete My Account</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

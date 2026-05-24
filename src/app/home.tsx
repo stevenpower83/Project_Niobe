@@ -157,11 +157,13 @@ export default function HomeScreen() {
               <Text style={styles.signEmoji}>
                 {getSignEmoji(profile.zodiac_type, profile.zodiac_sign)}
               </Text>
-              <Text style={styles.signName}>{profile.zodiac_sign}</Text>
-              <Text style={styles.signType}>
-                {profile.zodiac_type === 'western' ? 'Western Zodiac' : 'Chinese Zodiac'}
-              </Text>
-              <Text style={styles.welcome}>Beware, {profile.full_name}...</Text>
+              <View style={styles.signInfo}>
+                <Text style={styles.signName}>{profile.zodiac_sign}</Text>
+                <Text style={styles.signType}>
+                  {profile.zodiac_type === 'western' ? 'Western Zodiac' : 'Chinese Zodiac'}
+                </Text>
+                <Text style={styles.welcome}>Beware, {profile.full_name}...</Text>
+              </View>
             </StyledCard>
 
             {/* Stale notice */}
@@ -279,12 +281,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   signCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: 20,
+    gap: 16,
+    paddingVertical: 16,
   },
   signEmoji: {
-    fontSize: 36,
+    fontSize: 52,
+    width: 64,
+    textAlign: 'center',
+  },
+  signInfo: {
+    flex: 1,
+    gap: 3,
   },
   signName: {
     color: Colors.textPrimary,
@@ -298,7 +307,8 @@ const styles = StyleSheet.create({
   welcome: {
     color: Colors.textTertiary,
     fontSize: 12,
-    marginTop: 4,
+    fontStyle: 'italic',
+    marginTop: 2,
   },
   staleNotice: {
     color: Colors.textSecondary,

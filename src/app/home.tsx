@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   Pressable,
   StyleSheet,
@@ -113,7 +114,11 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerEmoji}>💀</Text>
+        <Image
+          source={require('../../assets/images/logo_192.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
         <Text style={styles.headerTitle}>Horroscope</Text>
         <View style={styles.headerActions}>
           <Pressable style={styles.iconBtn} onPress={() => router.push('/support')}>
@@ -217,8 +222,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  headerEmoji: {
-    fontSize: 20,
+  headerLogo: {
+    width: 32,
+    height: 32,
     marginRight: 8,
   },
   headerTitle: {

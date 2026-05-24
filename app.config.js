@@ -4,7 +4,7 @@ export default {
     slug: 'horroscope',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/images/icon.png',
+    icon: './assets/images/appicon_1254.png',
     scheme: 'horroscope',
     userInterfaceStyle: 'dark',
     backgroundColor: '#0d0020',
@@ -34,8 +34,8 @@ export default {
         {
           backgroundColor: '#0d0020',
           android: {
-            image: './assets/images/splash-icon.png',
-            imageWidth: 76,
+            image: './assets/images/logo_512.png',
+            imageWidth: 200,
           },
         },
       ],

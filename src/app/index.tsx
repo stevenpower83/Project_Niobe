@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   Pressable,
   ScrollView,
@@ -105,10 +106,11 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo placeholder — replace with actual logo image */}
-          <View style={[styles.logo, isSignup && styles.logoSmall]}>
-            <Text style={styles.logoEmoji}>💀</Text>
-          </View>
+          <Image
+            source={require('../../assets/images/logo_512.png')}
+            style={[styles.logo, isSignup && styles.logoSmall]}
+            resizeMode="contain"
+          />
 
           <Text style={styles.title}>Horroscope</Text>
           <Text style={styles.tagline}>Your fate awaits...</Text>
@@ -246,23 +248,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logo: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.card,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 140,
+    height: 140,
     marginBottom: 8,
   },
   logoSmall: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-  },
-  logoEmoji: {
-    fontSize: 48,
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 28,

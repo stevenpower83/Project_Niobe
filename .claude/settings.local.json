@@ -24,7 +24,13 @@
       "Bash(git remote *)",
       "Bash(Remove-Item -Recurse -Force \"C:\\\\Users\\\\StevenPower\\\\OneDrive - Steven Power\\\\OneDrive\\\\Documents\\\\POWR DATA\\\\GitHub\\\\Project_Niobe_tmp\")",
       "Bash(git commit -m 'docs: add SESSION_NOTES.md with setup steps, decisions, and resume commands *)",
-      "Bash(npx eas-cli *)"
+      "Bash(npx eas-cli *)",
+      "Bash(gh org *)",
+      "Bash(gh api *)",
+      "Bash(git commit -m 'chore: add EAS project ID \\(@powrdata/horroscope\\) *)",
+      "Bash(gh secret *)",
+      "Bash(npm start *)",
+      "Bash(git commit -m 'fix: use localStorage for Supabase session storage on web *)"
     ]
   }
 }

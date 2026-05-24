@@ -3,6 +3,8 @@
 Reference for all tooling, workflow, and architecture decisions across projects.
 Updated: 2026-05-24. Revise when the ecosystem evolves.
 
+> **Industry validation** — This approach is backed by production teams. See [Industry References](#industry-references) at the bottom.
+
 ---
 
 ## Stack Choices
@@ -33,6 +35,7 @@ npm start
 - Native changes (new packages with native code, config changes) require a new development build
 
 **Never use Expo Go** — it's a beginner tool. Development builds are your permanent dev environment.
+See: [Expo Go vs Dev Client — Medium](https://medium.com/@pamudasansika/expo-go-vs-expo-dev-client-which-one-should-you-actually-use-1538f6aae194) · [Expo official migration guide](https://docs.expo.dev/develop/development-builds/expo-go-to-dev-build/)
 
 ### Development build (rebuild when native changes)
 
@@ -72,6 +75,9 @@ Did you change native code? (new packages, plugins, config)
 The `fingerprint` runtime version policy enforces this automatically.
 Devices reject updates whose fingerprint doesn't match their build.
 
+> "Expo's EAS Update process is production-grade: versioned, staged, signed, and wired into your CI/CD pipeline."
+> — [Complete Mental Model for Modern RN Dev, DEV Community](https://dev.to/ersuman/expo-eas-prebuild-ota-cicd-a-complete-mental-model-for-modern-react-native-development-1cm4)
+
 ---
 
 ## Channel Strategy
@@ -110,6 +116,9 @@ Policy: **`fingerprint`** — generates a hash of all native dependencies and co
 - Prevents JS-native mismatches that crash apps
 
 Never use `appVersion` policy — it's easy to forget to bump the version and ship a broken OTA.
+
+Bundle diffing (SDK 55+): OTA updates only download the changed bytes, not the full bundle — 60–80% smaller updates in practice.
+See: [EAS Update OTA Guide 2026 — React Native Relay](https://reactnativerelay.com/article/react-native-ota-updates-eas-update-rollouts-rollbacks-cicd)
 
 ---
 
@@ -182,3 +191,31 @@ assets/
 - **Sentry** — crash monitoring before first public release
 - **EAS Insights** — app analytics once in production
 - **Apple Developer enrollment** — required before iOS builds; enroll at developer.apple.com
+
+---
+
+## Industry References
+
+These sources informed the tooling and workflow decisions in this document.
+
+### Dev Builds vs Expo Go
+- [Expo Go vs Expo Dev Client: Which One Should You Actually Use?](https://medium.com/@pamudasansika/expo-go-vs-expo-dev-client-which-one-should-you-actually-use-1538f6aae194) — Pamuda Sansika, Medium
+  > "Dev Client is your actual workshop. Expo Go is your quick sketch pad."
+- [Switch from Expo Go to a development build](https://docs.expo.dev/develop/development-builds/expo-go-to-dev-build/) — Expo official docs
+
+### EAS Build & CI/CD
+- [Expo for React Native in 2025: A Perspective](https://hashrocket.com/blog/posts/expo-for-react-native-in-2025-a-perspective) — Hashrocket (professional app dev agency)
+  > "OTA updates through EAS Update are a game changer for patches and bug fixes — you push JS updates directly to users without app store review."
+- [Complete Mental Model for Modern React Native Development](https://dev.to/ersuman/expo-eas-prebuild-ota-cicd-a-complete-mental-model-for-modern-react-native-development-1cm4) — DEV Community
+  > "Expo's EAS Update process is production-grade: versioned, staged, signed, and wired into your CI/CD pipeline."
+- [React Native App Deployment with Expo & EAS CLI](https://levi9-serbia.medium.com/react-native-app-deployment-with-expo-eas-cli-your-complete-guide-to-app-store-publishing-d4674cb00518) — Levi9 Serbia, Medium
+
+### OTA Updates
+- [EAS Update: React Native OTA Guide 2026](https://reactnativerelay.com/article/react-native-ota-updates-eas-update-rollouts-rollbacks-cicd) — React Native Relay
+  > "SDK 55 introduced bundle diffing — clients only download the diff, reducing update sizes 60–80%."
+- [React Native OTA Updates with Expo EAS: Step-by-Step Guide & Best Practices](https://dev.to/nour_abdou/react-native-ota-updates-with-expo-eas-step-by-step-guide-best-practices-1idk) — DEV Community
+- [Make EAS Updates Apply Immediately](https://medium.com/@cathylai_40144/make-eas-updates-apply-immediately-a-practical-guide-for-expo-react-native-add65dadff48) — Cathy Lai, Medium
+
+### General Expo + RN in Production
+- [It's 2025. You Should Probably Be Using Expo for React Native.](https://dev.to/devi_green_00f82b6d705/its-2025-you-should-probably-be-using-expo-for-react-native-407a) — DEV Community
+- [Should I Use Expo for React Native in 2025?](https://scriptide.tech/blog/should-you-use-expo-for-react-native) — Script IDE

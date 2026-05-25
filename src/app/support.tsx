@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,7 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
+import { signOut } from '../services/auth';
 import { supabase } from '../services/supabase';
 import { StyledCard } from '../components/StyledCard';
 
@@ -71,6 +74,14 @@ export default function SupportScreen() {
       .eq('id', userId);
   }
 
+  async function handleSignOut() {
+    try {
+      await signOut();
+    } catch (err) {
+      Alert.alert('Sign Out', (err as Error).message);
+    }
+  }
+
   async function openUrl(url: string) {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
@@ -84,10 +95,20 @@ export default function SupportScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>← Back</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Support</Text>
+        <Image
+          source={require('../../assets/images/logo_192.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
+        <Text style={styles.headerTitle}>Horroscope</Text>
+        <View style={styles.headerActions}>
+          <Pressable style={styles.iconBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back-outline" size={20} color={Colors.textSecondary} />
+          </Pressable>
+          <Pressable style={styles.iconBtn} onPress={handleSignOut}>
+            <Ionicons name="log-out-outline" size={20} color={Colors.textSecondary} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -128,7 +149,7 @@ export default function SupportScreen() {
               <Text style={styles.notifSubtitle}>Coming soon</Text>
             </View>
             <Switch
-              value={notificationsEnabled}
+              value={false}
               onValueChange={handleNotificationToggle}
               disabled
               thumbColor={Colors.textSecondary}
@@ -159,17 +180,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  backBtn: {
-    marginRight: 12,
-  },
-  backText: {
-    color: Colors.accent,
-    fontSize: 15,
+  headerLogo: {
+    width: 32,
+    height: 32,
+    marginRight: 8,
   },
   headerTitle: {
-    color: Colors.textPrimary,
-    fontSize: 18,
+    flex: 1,
+    color: Colors.accent,
+    fontSize: 20,
     fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scroll: {
     padding: 16,

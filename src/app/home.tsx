@@ -9,12 +9,13 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '../constants/Colors';
 import { getSignEmoji, type ZodiacType } from '../constants/Zodiacs';
 import { signOut } from '../services/auth';
-import { getHoroscope, refreshHoroscope, type HoroscopeResult } from '../services/horoscope';
+import { getHoroscope, type HoroscopeResult } from '../services/horoscope';
 import { supabase } from '../services/supabase';
 import { StyledCard } from '../components/StyledCard';
 
@@ -31,7 +32,7 @@ export default function HomeScreen() {
   const [horoscope, setHoroscope] = useState<HoroscopeResult | null>(null);
   const [showingOriginal, setShowingOriginal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
 
@@ -80,12 +81,12 @@ export default function HomeScreen() {
     loadData();
   }, [loadData]);
 
-  async function handleRefresh() {
+  async function handleRetry() {
     if (!profile) return;
-    setRefreshing(true);
+    setRetrying(true);
     setError(null);
     try {
-      const result = await refreshHoroscope(profile.id, profile.zodiac_type, profile.zodiac_sign);
+      const result = await getHoroscope(profile.id, profile.zodiac_type, profile.zodiac_sign);
       if (mounted.current) {
         setHoroscope(result);
         setShowingOriginal(false);
@@ -93,7 +94,7 @@ export default function HomeScreen() {
     } catch (err) {
       if (mounted.current) setError((err as Error).message);
     } finally {
-      if (mounted.current) setRefreshing(false);
+      if (mounted.current) setRetrying(false);
     }
   }
 
@@ -122,10 +123,10 @@ export default function HomeScreen() {
         <Text style={styles.headerTitle}>Horroscope</Text>
         <View style={styles.headerActions}>
           <Pressable style={styles.iconBtn} onPress={() => router.push('/support')}>
-            <Text style={styles.iconBtnText}>♥</Text>
+            <Ionicons name="heart-outline" size={20} color={Colors.textSecondary} />
           </Pressable>
           <Pressable style={styles.iconBtn} onPress={handleSignOut}>
-            <Text style={styles.iconBtnText}>🚪</Text>
+            <Ionicons name="log-out-outline" size={20} color={Colors.textSecondary} />
           </Pressable>
         </View>
       </View>
@@ -166,11 +167,14 @@ export default function HomeScreen() {
               </View>
             </StyledCard>
 
-            {/* Stale notice */}
+            {/* Stale notice + retry */}
             {horoscope.isStale && (
-              <Text style={styles.staleNotice}>
-                ⚠ Showing a previous reading — the oracle is unreachable.
-              </Text>
+              <Pressable onPress={handleRetry} disabled={retrying} style={styles.staleNotice}>
+                {retrying
+                  ? <ActivityIndicator color={Colors.textSecondary} size="small" />
+                  : <Text style={styles.staleNoticeText}>⚠ Showing a previous reading — tap to consult the oracle again.</Text>
+                }
+              </Pressable>
             )}
 
             {/* Horoscope card */}
@@ -192,18 +196,6 @@ export default function HomeScreen() {
               </Pressable>
             </StyledCard>
 
-            {/* Refresh button — always shown; most useful when stale */}
-            <Pressable
-              style={({ pressed }) => [styles.refreshBtn, pressed && styles.refreshBtnPressed]}
-              onPress={handleRefresh}
-              disabled={refreshing}
-            >
-              {refreshing ? (
-                <ActivityIndicator color={Colors.accent} />
-              ) : (
-                <Text style={styles.refreshText}>Update Horroscope</Text>
-              )}
-            </Pressable>
           </>
         )}
       </ScrollView>
@@ -311,6 +303,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   staleNotice: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  staleNoticeText: {
     color: Colors.textSecondary,
     fontSize: 12,
     textAlign: 'center',
@@ -336,22 +332,6 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     color: Colors.accent,
-    fontSize: 13,
-  },
-  refreshBtn: {
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: 8,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  refreshBtnPressed: {
-    borderColor: Colors.accent,
-    backgroundColor: Colors.card,
-  },
-  refreshText: {
-    color: Colors.textSecondary,
     fontSize: 13,
   },
 });

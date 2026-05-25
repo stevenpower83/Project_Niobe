@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { supabase } from './supabase';
 import type { ZodiacType } from '../constants/Zodiacs';
 
@@ -14,11 +15,25 @@ function getApiDate(): string {
 
 async function invokeLlm(body: Record<string, unknown>): Promise<string> {
   const { data, error } = await supabase.functions.invoke('horoscope-llm', { body });
-  if (error) throw error;
+  if (error) {
+    // Extract the actual error body from the function response
+    const ctx = (error as { context?: Response }).context;
+    if (ctx) {
+      try {
+        const json = await ctx.clone().json() as { error?: string };
+        if (json.error) throw new Error(json.error);
+      } catch (e) {
+        if (e instanceof Error && e.message !== error.message) throw e;
+      }
+    }
+    throw error;
+  }
   return (data as { text: string }).text;
 }
 
 async function fetchWesternHoroscope(sign: string): Promise<string> {
+  // ohmanda.com blocks browser requests (CORS) — native only
+  if (Platform.OS === 'web') throw new Error('web-cors');
   const res = await fetch(`https://ohmanda.com/api/horoscope/${sign.toLowerCase()}/`);
   if (!res.ok) throw new Error(`API error ${res.status}`);
   const json = (await res.json()) as { horoscope: string };
@@ -30,7 +45,21 @@ async function transformHoroscope(sign: string, rawText: string): Promise<string
 }
 
 async function generateChineseHoroscope(sign: string): Promise<string> {
-  return invokeLlm({ type: 'generate', sign });
+  return invokeLlm({ type: 'generate', sign, zodiac_type: 'chinese' });
+}
+
+// On web the ohmanda fetch is blocked by CORS — generate both readings via LLM
+async function fetchAndTransformWestern(sign: string): Promise<{ rawText: string; horrorText: string }> {
+  if (Platform.OS !== 'web') {
+    const rawText = await fetchWesternHoroscope(sign);
+    const horrorText = await transformHoroscope(sign, rawText);
+    return { rawText, horrorText };
+  }
+  const [rawText, horrorText] = await Promise.all([
+    invokeLlm({ type: 'generate_raw', sign, zodiac_type: 'western' }),
+    invokeLlm({ type: 'generate', sign, zodiac_type: 'western' }),
+  ]);
+  return { rawText, horrorText };
 }
 
 export interface HoroscopeResult {
@@ -65,8 +94,7 @@ export async function getHoroscope(
     let horrorText: string;
 
     if (zodiacType === 'western') {
-      rawText = await fetchWesternHoroscope(zodiacSign);
-      horrorText = await transformHoroscope(zodiacSign, rawText);
+      ({ rawText, horrorText } = await fetchAndTransformWestern(zodiacSign));
     } else {
       horrorText = await generateChineseHoroscope(zodiacSign);
       rawText = horrorText;
@@ -114,8 +142,7 @@ export async function refreshHoroscope(
   let horrorText: string;
 
   if (zodiacType === 'western') {
-    rawText = await fetchWesternHoroscope(zodiacSign);
-    horrorText = await transformHoroscope(zodiacSign, rawText);
+    ({ rawText, horrorText } = await fetchAndTransformWestern(zodiacSign));
   } else {
     horrorText = await generateChineseHoroscope(zodiacSign);
     rawText = horrorText;

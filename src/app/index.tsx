@@ -7,9 +7,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Modal,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,6 +35,10 @@ export default function LoginScreen() {
 
   const [typePickerOpen, setTypePickerOpen] = useState(false);
   const [signPickerOpen, setSignPickerOpen] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotStatus, setForgotStatus] = useState<{ text: string; isError: boolean } | null>(null);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const zodiacSigns = Object.keys(zodiacType === 'western' ? WESTERN_SIGNS : CHINESE_SIGNS);
 
@@ -81,16 +85,25 @@ export default function LoginScreen() {
     }
   }
 
-  async function handleForgotPassword() {
-    if (!email) {
-      Alert.alert('Reset Password', 'Enter your email address above first.');
+  function openForgotModal() {
+    setForgotEmail('');
+    setForgotStatus(null);
+    setForgotOpen(true);
+  }
+
+  async function handleForgotSubmit() {
+    if (!forgotEmail) {
+      setForgotStatus({ text: 'Please enter your email address.', isError: true });
       return;
     }
+    setForgotLoading(true);
     try {
-      await resetPassword(email);
-      Alert.alert('Reset Password', 'A password reset link has been sent to your email.');
+      await resetPassword(forgotEmail);
+      setForgotStatus({ text: 'Reset link sent — check your email.', isError: false });
     } catch (err) {
-      Alert.alert('Reset Password', (err as Error).message);
+      setForgotStatus({ text: (err as Error).message, isError: true });
+    } finally {
+      setForgotLoading(false);
     }
   }
 
@@ -130,7 +143,7 @@ export default function LoginScreen() {
           {/* Password */}
           <View style={styles.passwordRow}>
             <TextInput
-              style={[styles.input, styles.passwordInput]}
+              style={styles.passwordInput}
               placeholder="Password"
               placeholderTextColor={Colors.textTertiary}
               value={password}
@@ -139,7 +152,7 @@ export default function LoginScreen() {
               autoCapitalize="none"
             />
             <Pressable style={styles.eyeBtn} onPress={() => setShowPassword((v) => !v)}>
-              <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁'}</Text>
+              <Text style={styles.eyeText}>{showPassword ? 'HIDE' : 'SHOW'}</Text>
             </Pressable>
           </View>
 
@@ -204,7 +217,7 @@ export default function LoginScreen() {
 
           {/* Forgot password — login mode only */}
           {!isSignup && (
-            <Pressable style={styles.linkBtn} onPress={handleForgotPassword}>
+            <Pressable style={styles.linkBtn} onPress={openForgotModal}>
               <Text style={styles.forgotText}>Forgot your password? Reset it here</Text>
             </Pressable>
           )}
@@ -228,6 +241,53 @@ export default function LoginScreen() {
         onSelect={setZodiacSign}
         onClose={() => setSignPickerOpen(false)}
       />
+
+      {/* Forgot password modal */}
+      <Modal
+        visible={forgotOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setForgotOpen(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setForgotOpen(false)}>
+          <Pressable style={styles.modalBox} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Reset Password</Text>
+            <Text style={styles.modalBody}>
+              Enter your email address and we'll send you a reset link.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={Colors.textTertiary}
+              value={forgotEmail}
+              onChangeText={setForgotEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+            />
+            {forgotStatus && (
+              <Text style={[styles.status, forgotStatus.isError ? styles.statusError : styles.statusOk]}>
+                {forgotStatus.text}
+              </Text>
+            )}
+            <Pressable
+              style={({ pressed }) => [styles.submitBtn, pressed && styles.submitBtnPressed]}
+              onPress={handleForgotSubmit}
+              disabled={forgotLoading}
+            >
+              {forgotLoading ? (
+                <ActivityIndicator color={Colors.textPrimary} />
+              ) : (
+                <Text style={styles.submitText}>Send Reset Link</Text>
+              )}
+            </Pressable>
+            <Pressable style={styles.linkBtn} onPress={() => setForgotOpen(false)}>
+              <Text style={styles.linkText}>Cancel</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -284,25 +344,29 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     flexDirection: 'row',
     alignItems: 'center',
+    height: 50,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: 8,
+    backgroundColor: Colors.card,
   },
   passwordInput: {
     flex: 1,
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
+    paddingHorizontal: 14,
+    color: Colors.textPrimary,
+    fontSize: 15,
+    height: '100%',
   },
   eyeBtn: {
-    height: 50,
     paddingHorizontal: 14,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderColor: Colors.primary,
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
+    height: '100%',
     justifyContent: 'center',
   },
   eyeText: {
-    fontSize: 18,
+    color: Colors.textTertiary,
+    fontSize: 11,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   picker: {
     width: '100%',
@@ -372,5 +436,32 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 12,
     textDecorationLine: 'underline',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalBox: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: 24,
+    gap: 12,
+  },
+  modalTitle: {
+    color: Colors.accent,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalBody: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
 });

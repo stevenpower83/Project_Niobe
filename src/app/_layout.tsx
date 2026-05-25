@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 import { Colors } from '../constants/Colors';
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts(Ionicons.font);
   // undefined = still loading; null = no session; Session = authenticated
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const router = useRouter();
@@ -34,6 +37,8 @@ export default function RootLayout() {
       router.replace('/');
     }
   }, [session]);
+
+  if (!fontsLoaded) return null;
 
   return (
     <>

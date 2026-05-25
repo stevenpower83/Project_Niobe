@@ -125,7 +125,7 @@ export default function HomeScreen() {
             <Text style={styles.iconBtnText}>♥</Text>
           </Pressable>
           <Pressable style={styles.iconBtn} onPress={handleSignOut}>
-            <Text style={styles.iconBtnText}>⏻</Text>
+            <Text style={styles.iconBtnText}>🚪</Text>
           </Pressable>
         </View>
       </View>

@@ -205,7 +205,7 @@ export default function LoginScreen() {
           {/* Forgot password — login mode only */}
           {!isSignup && (
             <Pressable style={styles.linkBtn} onPress={handleForgotPassword}>
-              <Text style={styles.linkTextDim}>Forgot your fate?</Text>
+              <Text style={styles.forgotText}>Forgot your password? Reset it here</Text>
             </Pressable>
           )}
         </ScrollView>
@@ -367,5 +367,10 @@ const styles = StyleSheet.create({
   linkTextDim: {
     color: Colors.textSecondary,
     fontSize: 12,
+  },
+  forgotText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    textDecorationLine: 'underline',
   },
 });

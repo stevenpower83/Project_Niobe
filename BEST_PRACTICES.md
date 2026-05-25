@@ -115,7 +115,7 @@ Policy: **`fingerprint`** — generates a hash of all native dependencies and co
 - If fingerprint changes → new build required → CI creates it automatically on release branch
 - Prevents JS-native mismatches that crash apps
 
-Never use `appVersion` policy — it's easy to forget to bump the version and ship a broken OTA.
+**Windows note:** `fingerprint` policy has a known Windows/Linux hash mismatch in React Native autolinking — EAS builds fail with "runtime version mismatch" when developing on Windows. Use `appVersion` policy instead and manually bump `version` in `app.config.js` when native dependencies change.
 
 Bundle diffing (SDK 55+): OTA updates only download the changed bytes, not the full bundle — 60–80% smaller updates in practice.
 See: [EAS Update OTA Guide 2026 — React Native Relay](https://reactnativerelay.com/article/react-native-ota-updates-eas-update-rollouts-rollbacks-cicd)

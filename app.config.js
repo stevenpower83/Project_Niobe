@@ -23,7 +23,7 @@ export default {
       predictiveBackGestureEnabled: false,
     },
     web: {
-      output: 'static',
+      output: 'spa',
       favicon: './assets/images/favicon.png',
     },
     plugins: [
@@ -44,9 +44,11 @@ export default {
     updates: {
       url: 'https://u.expo.dev/c419ad97-52fe-4b69-bf76-ef02bb02993f',
     },
-    // fingerprint: rebuilds only when native code changes; OTA otherwise
+    // appVersion: OTA updates apply to all builds with the same app version.
+    // Bump version in this file when native dependencies change.
+    // (fingerprint policy has a Windows/Linux autolinking hash mismatch with EAS)
     runtimeVersion: {
-      policy: 'fingerprint',
+      policy: 'appVersion',
     },
     experiments: {
       typedRoutes: true,

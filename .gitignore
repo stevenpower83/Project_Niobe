@@ -41,6 +41,13 @@ yarn-error.*
 # EAS
 google-service-account.json
 
+# Claude Code local settings (may contain tokens)
+.claude/settings.local.json
+
+# MTX captures (local working notes, not part of project history)
+mtx-captures.md
+mtx-captures-*.md
+
 # generated native folders
 /ios
 /android

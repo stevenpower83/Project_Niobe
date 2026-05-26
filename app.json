@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Project_Niobe_tmp",
-    "slug": "Project_Niobe_tmp",
+    "name": "Horroscope",
+    "slug": "horroscope",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "projectniobetmp",
+    "scheme": "horroscope",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1a0000",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#0d0d0d",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76

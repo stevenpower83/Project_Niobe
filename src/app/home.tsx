@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +19,7 @@ import { signOut } from '../services/auth';
 import { getHoroscope, type HoroscopeResult } from '../services/horoscope';
 import { supabase } from '../services/supabase';
 import { StyledCard } from '../components/StyledCard';
+import { HeaderIconBtn } from '../components/HeaderIconBtn';
 
 interface Profile {
   id: string;
@@ -34,6 +36,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredToggle, setHoveredToggle] = useState(false);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -116,22 +119,23 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Image
-          source={require('../../assets/images/logo_192.png')}
+          source={require('../../assets/images/simple_logo_48.png')}
           style={styles.headerLogo}
           resizeMode="contain"
         />
         <Text style={styles.headerTitle}>Horroscope</Text>
         <View style={styles.headerActions}>
-          <Pressable style={styles.iconBtn} onPress={() => router.push('/support')}>
+          <HeaderIconBtn onPress={() => router.push('/support')} tooltip="Support">
             <Ionicons name="heart-outline" size={20} color={Colors.textSecondary} />
-          </Pressable>
-          <Pressable style={styles.iconBtn} onPress={handleSignOut}>
+          </HeaderIconBtn>
+          <HeaderIconBtn onPress={handleSignOut} tooltip="Log out">
             <Ionicons name="log-out-outline" size={20} color={Colors.textSecondary} />
-          </Pressable>
+          </HeaderIconBtn>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.content}>
         {/* Loading */}
         {loading && (
           <View style={styles.centerContent}>
@@ -156,7 +160,7 @@ export default function HomeScreen() {
             {/* Sign card */}
             <StyledCard style={styles.signCard}>
               <Text style={styles.signEmoji}>
-                {getSignEmoji(profile.zodiac_type, profile.zodiac_sign)}
+                {`${getSignEmoji(profile.zodiac_type, profile.zodiac_sign)}︎`}
               </Text>
               <View style={styles.signInfo}>
                 <Text style={styles.signName}>{profile.zodiac_sign}</Text>
@@ -177,9 +181,11 @@ export default function HomeScreen() {
               </Pressable>
             )}
 
-            {/* Horoscope card */}
-            <StyledCard style={styles.horoscopeCard}>
-              <Text style={styles.horoscopeTitle}>{horoscopeTitle}</Text>
+            {/* Horoscope section — no card background */}
+            <View style={styles.horoscopeSection}>
+              <Text style={[styles.horoscopeTitle, showingOriginal && styles.horoscopeTitleOriginal]}>
+                {horoscopeTitle}
+              </Text>
               <Text
                 style={[
                   styles.horoscopeText,
@@ -191,13 +197,20 @@ export default function HomeScreen() {
               </Text>
 
               {/* Toggle */}
-              <Pressable style={styles.toggleBtn} onPress={() => setShowingOriginal((v) => !v)}>
+              <Pressable
+                style={[styles.toggleBtn, hoveredToggle && styles.toggleBtnHovered]}
+                onPress={() => setShowingOriginal((v) => !v)}
+                {...(Platform.OS === 'web'
+                  ? { onPointerEnter: () => setHoveredToggle(true), onPointerLeave: () => setHoveredToggle(false) }
+                  : {})}
+              >
                 <Text style={styles.toggleText}>{toggleLabel}</Text>
               </Pressable>
-            </StyledCard>
+            </View>
 
           </>
         )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -213,12 +226,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: Colors.header,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   headerLogo: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     marginRight: 8,
   },
   headerTitle: {
@@ -226,7 +240,6 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     fontSize: 20,
     fontWeight: 'bold',
-    letterSpacing: 1,
   },
   headerActions: {
     flexDirection: 'row',
@@ -237,13 +250,20 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 18,
   },
   iconBtnText: {
     color: Colors.textSecondary,
     fontSize: 18,
   },
   scroll: {
+    flexGrow: 1,
+    alignItems: 'center',
     padding: 16,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 700,
     gap: 12,
   },
   centerContent: {
@@ -277,11 +297,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
     paddingVertical: 16,
+    backgroundColor: '#1a0000',
+    borderColor: '#8B0000',
   },
   signEmoji: {
-    fontSize: 52,
+    fontSize: 44,
     width: 64,
     textAlign: 'center',
+    color: Colors.textPrimary,
   },
   signInfo: {
     flex: 1,
@@ -311,13 +334,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
   },
-  horoscopeCard: {
+  horoscopeSection: {
     gap: 12,
   },
   horoscopeTitle: {
     color: Colors.accent,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+  },
+  horoscopeTitleOriginal: {
+    color: '#666666',
   },
   horoscopeText: {
     color: Colors.textPrimary,
@@ -325,13 +351,19 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   horoscopeTextOriginal: {
-    color: Colors.textSecondary,
+    color: '#AAAAAA',
   },
   toggleBtn: {
-    paddingTop: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    alignSelf: 'flex-start',
+  },
+  toggleBtnHovered: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
   },
   toggleText: {
-    color: Colors.accent,
+    color: '#666666',
     fontSize: 13,
   },
 });

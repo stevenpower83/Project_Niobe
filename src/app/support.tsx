@@ -17,22 +17,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import { signOut } from '../services/auth';
 import { supabase } from '../services/supabase';
-import { StyledCard } from '../components/StyledCard';
+import { HeaderIconBtn } from '../components/HeaderIconBtn';
 
 const FEEDBACK_URL = 'https://tally.so/r/OD8ZDa';
 const DONATION_URL = 'https://ko-fi.com/stevenpower';
 const DELETE_URL = 'https://tally.so/r/81jYol';
 
-function feedbackUrl(): string {
-  if (Platform.OS === 'ios') return FEEDBACK_URL;
-  if (Platform.OS === 'android') return FEEDBACK_URL;
-  return FEEDBACK_URL;
-}
 
 export default function SupportScreen() {
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [hoveredSuffering, setHoveredSuffering] = useState(false);
+  const [hoveredDeveloper, setHoveredDeveloper] = useState(false);
+  const hoverProps = (setter: (v: boolean) => void) =>
+    Platform.OS === 'web'
+      ? { onPointerEnter: () => setter(true), onPointerLeave: () => setter(false) }
+      : {};
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -96,18 +97,18 @@ export default function SupportScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Image
-          source={require('../../assets/images/logo_192.png')}
+          source={require('../../assets/images/simple_logo_48.png')}
           style={styles.headerLogo}
           resizeMode="contain"
         />
         <Text style={styles.headerTitle}>Horroscope</Text>
         <View style={styles.headerActions}>
-          <Pressable style={styles.iconBtn} onPress={() => router.back()}>
+          <HeaderIconBtn onPress={() => router.back()} tooltip="Back">
             <Ionicons name="arrow-back-outline" size={20} color={Colors.textSecondary} />
-          </Pressable>
-          <Pressable style={styles.iconBtn} onPress={handleSignOut}>
+          </HeaderIconBtn>
+          <HeaderIconBtn onPress={handleSignOut} tooltip="Log out">
             <Ionicons name="log-out-outline" size={20} color={Colors.textSecondary} />
-          </Pressable>
+          </HeaderIconBtn>
         </View>
       </View>
 
@@ -120,32 +121,44 @@ export default function SupportScreen() {
         </View>
 
         {/* Feedback */}
-        <StyledCard>
-          <Pressable
-            style={({ pressed }) => [styles.actionBtn, pressed && styles.actionBtnPressed]}
-            onPress={() => openUrl(feedbackUrl())}
-          >
-            <Text style={styles.actionBtnText}>📣 Share Your Suffering</Text>
-          </Pressable>
-          <Text style={styles.hint}>Tell us what the spirits whisper about the app</Text>
-        </StyledCard>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionBtn,
+            (hoveredSuffering || pressed) && styles.actionBtnHovered,
+          ]}
+          onPress={() => openUrl(FEEDBACK_URL)}
+          {...hoverProps(setHoveredSuffering)}
+        >
+          <Text style={styles.actionBtnText}>📣 Share Your Suffering</Text>
+        </Pressable>
+        <Text style={styles.hint}>Tell us what the spirits whisper about the app</Text>
+
+        <View style={styles.divider} />
 
         {/* Donation */}
-        <StyledCard>
-          <Pressable
-            style={({ pressed }) => [styles.actionBtn, pressed && styles.actionBtnPressed]}
-            onPress={() => openUrl(DONATION_URL)}
-          >
-            <Text style={styles.actionBtnText}>🩸 Feed the Developer</Text>
-          </Pressable>
-          <Text style={styles.hint}>Keep the dark arts alive with a small donation</Text>
-        </StyledCard>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionBtn,
+            styles.actionBtnOutline,
+            (hoveredDeveloper || pressed) && styles.actionBtnOutlineHovered,
+          ]}
+          onPress={() => openUrl(DONATION_URL)}
+          {...hoverProps(setHoveredDeveloper)}
+        >
+          <Text style={styles.actionBtnOutlineText}>🩸 Feed the Developer</Text>
+        </Pressable>
+        <Text style={styles.hint}>Keep the dark arts alive with a small donation</Text>
+
+        <View style={styles.divider} />
 
         {/* Notifications */}
-        <StyledCard style={styles.notifCard}>
+        <View style={styles.notifContainer}>
           <View style={styles.notifRow}>
             <View style={styles.notifLabel}>
-              <Text style={styles.notifTitle}>Daily Prophecy</Text>
+              <View style={styles.notifTitleRow}>
+                <Ionicons name="notifications-outline" size={15} color={Colors.textSecondary} />
+                <Text style={styles.notifTitle}>Daily Prophecy</Text>
+              </View>
               <Text style={styles.notifSubtitle}>Coming soon</Text>
             </View>
             <Switch
@@ -156,7 +169,9 @@ export default function SupportScreen() {
               trackColor={{ false: Colors.border, true: Colors.primary }}
             />
           </View>
-        </StyledCard>
+        </View>
+
+        <View style={styles.divider} />
 
         {/* Delete account */}
         <Pressable style={styles.deleteBtn} onPress={() => openUrl(DELETE_URL)}>
@@ -177,12 +192,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: Colors.header,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   headerLogo: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     marginRight: 8,
   },
   headerTitle: {
@@ -190,7 +206,6 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     fontSize: 20,
     fontWeight: 'bold',
-    letterSpacing: 1,
   },
   headerActions: {
     flexDirection: 'row',
@@ -201,12 +216,18 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 18,
+  },
+  iconBtnHovered: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   scroll: {
     padding: 16,
-    gap: 12,
+    alignItems: 'center',
+    gap: 10,
   },
   heroBlock: {
+    width: 280,
     alignItems: 'center',
     paddingVertical: 16,
     gap: 6,
@@ -228,26 +249,51 @@ const styles = StyleSheet.create({
   actionBtn: {
     backgroundColor: Colors.primary,
     borderRadius: 8,
-    height: 48,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-  },
-  actionBtnPressed: {
-    backgroundColor: Colors.accent,
+    width: 280,
   },
   actionBtnText: {
     color: Colors.textPrimary,
     fontSize: 15,
     fontWeight: 'bold',
   },
+  actionBtnHovered: {
+    backgroundColor: '#8B0000',
+  },
+  actionBtnOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  actionBtnOutlineText: {
+    color: Colors.accent,
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  actionBtnOutlineHovered: {
+    backgroundColor: 'rgba(139,0,0,0.15)',
+  },
   hint: {
     color: Colors.textTertiary,
     fontSize: 12,
     textAlign: 'center',
   },
-  notifCard: {
-    paddingVertical: 12,
+  divider: {
+    width: 280,
+    height: 1,
+    backgroundColor: '#222222',
+    marginVertical: 4,
+  },
+  notifContainer: {
+    width: 280,
+    backgroundColor: '#1a0000',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#330000',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   notifRow: {
     flexDirection: 'row',
@@ -256,6 +302,11 @@ const styles = StyleSheet.create({
   },
   notifLabel: {
     flex: 1,
+  },
+  notifTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   notifTitle: {
     color: Colors.textPrimary,

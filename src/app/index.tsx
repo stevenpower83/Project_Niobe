@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,10 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import { WESTERN_SIGNS, CHINESE_SIGNS, type ZodiacType } from '../constants/Zodiacs';
 import { signIn, signUp, resetPassword } from '../services/auth';
-import { ModalPicker } from '../components/ModalPicker';
+import { InlineDropdown } from '../components/InlineDropdown';
 
 type Mode = 'login' | 'signup';
 
@@ -33,14 +34,17 @@ export default function LoginScreen() {
   const [status, setStatus] = useState<{ text: string; isError: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [typePickerOpen, setTypePickerOpen] = useState(false);
-  const [signPickerOpen, setSignPickerOpen] = useState(false);
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotStatus, setForgotStatus] = useState<{ text: string; isError: boolean } | null>(null);
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  const zodiacSigns = Object.keys(zodiacType === 'western' ? WESTERN_SIGNS : CHINESE_SIGNS);
+  const zodiacSignsMap = zodiacType === 'western' ? WESTERN_SIGNS : CHINESE_SIGNS;
+  const zodiacSigns = Object.keys(zodiacSignsMap);
+  const zodiacSignLabels = Object.entries(zodiacSignsMap).map(([name, symbol]) => `${symbol}︎ ${name}`);
 
   function switchMode() {
     setMode((m) => (m === 'login' ? 'signup' : 'login'));
@@ -48,19 +52,28 @@ export default function LoginScreen() {
     setZodiacSign('');
   }
 
-  function handleTypeSelect(val: string) {
-    setZodiacType(val === 'Western (Zodiac)' ? 'western' : 'chinese');
+  function handleZodiacTypeSelect(val: string) {
+    setZodiacType(val as ZodiacType);
     setZodiacSign('');
   }
 
   async function handleSubmit() {
-    if (!email || !password) {
-      setStatus({ text: 'Email and password are required.', isError: true });
-      return;
-    }
-    if (mode === 'signup' && (!fullName || !zodiacSign)) {
-      setStatus({ text: 'Please fill in all fields.', isError: true });
-      return;
+    if (mode === 'login') {
+      if (!email || !password) {
+        setStatus({ text: 'The spirits require your email and password.', isError: true });
+        return;
+      }
+    } else {
+      const missing = [
+        !fullName && 'Full Name',
+        !email && 'Email',
+        !password && 'Password',
+        !zodiacSign && 'Your Sign',
+      ].filter(Boolean) as string[];
+      if (missing.length) {
+        setStatus({ text: `Still needed: ${missing.join(', ')}`, isError: true });
+        return;
+      }
     }
 
     setLoading(true);
@@ -73,7 +86,7 @@ export default function LoginScreen() {
       } else {
         const result = await signUp(email, password, fullName, zodiacType, zodiacSign);
         if (!result.session) {
-          setStatus({ text: 'Check your email to confirm your account.', isError: false });
+          setStatus({ text: 'Account created! Check your email, then return to face your fate.', isError: false });
         } else {
           router.replace('/home');
         }
@@ -93,13 +106,13 @@ export default function LoginScreen() {
 
   async function handleForgotSubmit() {
     if (!forgotEmail) {
-      setForgotStatus({ text: 'Please enter your email address.', isError: true });
+      setForgotStatus({ text: 'Enter your email address.', isError: true });
       return;
     }
     setForgotLoading(true);
     try {
       await resetPassword(forgotEmail);
-      setForgotStatus({ text: 'Reset link sent — check your email.', isError: false });
+      setForgotStatus({ text: 'Check your email for a reset link.', isError: false });
     } catch (err) {
       setForgotStatus({ text: (err as Error).message, isError: true });
     } finally {
@@ -108,9 +121,33 @@ export default function LoginScreen() {
   }
 
   const isSignup = mode === 'signup';
+  const [hoveredLink, setHoveredLink] = useState<'signup' | 'forgot' | null>(null);
+  const hoverProps = (id: 'signup' | 'forgot') =>
+    Platform.OS === 'web'
+      ? { onPointerEnter: () => setHoveredLink(id), onPointerLeave: () => setHoveredLink(null) }
+      : {};
 
   return (
     <SafeAreaView style={styles.safe}>
+      {/* Signup header — replaces logo/tagline in signup mode */}
+      {isSignup && (
+        <View style={styles.header}>
+          <Image
+            source={require('../../assets/images/simple_logo_48.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.headerTitle}>Horroscope</Text>
+          <Pressable
+            style={styles.iconBtn}
+            onPress={switchMode}
+            {...(Platform.OS === 'web' ? { title: 'Back' } as any : {})}
+          >
+            <Ionicons name="arrow-back-outline" size={20} color={Colors.textSecondary} />
+          </Pressable>
+        </View>
+      )}
+
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -119,78 +156,90 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
         >
-          <Image
-            source={require('../../assets/images/logo_512.png')}
-            style={[styles.logo, isSignup && styles.logoSmall]}
-            resizeMode="contain"
-          />
+          {/* Login hero */}
+          {!isSignup && (
+            <>
+              <Image
+                source={require('../../assets/images/logo_512.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+              <Text style={styles.title}>Horroscope</Text>
+              <Text style={styles.tagline}>Your fate awaits...</Text>
+            </>
+          )}
 
-          <Text style={styles.title}>Horroscope</Text>
-          <Text style={styles.tagline}>Your fate awaits...</Text>
+          {/* Full Name — signup only, shown first */}
+          {isSignup && (
+            <TextInput
+              style={styles.input}
+              placeholder="Full Name"
+              placeholderTextColor={Colors.textSecondary}
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="words"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => emailRef.current?.focus()}
+            />
+          )}
 
           {/* Email */}
           <TextInput
+            ref={emailRef}
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={Colors.textSecondary}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => passwordRef.current?.focus()}
           />
 
           {/* Password */}
           <View style={styles.passwordRow}>
             <TextInput
+              ref={passwordRef}
               style={styles.passwordInput}
               placeholder="Password"
-              placeholderTextColor={Colors.textTertiary}
+              placeholderTextColor={Colors.textSecondary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              returnKeyType="go"
+              onSubmitEditing={handleSubmit}
             />
             <Pressable style={styles.eyeBtn} onPress={() => setShowPassword((v) => !v)}>
-              <Text style={styles.eyeText}>{showPassword ? 'HIDE' : 'SHOW'}</Text>
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={18}
+                color={Colors.textTertiary}
+              />
             </Pressable>
           </View>
 
-          {/* Sign-up extras */}
+          {/* Zodiac pickers — signup only */}
           {isSignup && (
             <>
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor={Colors.textTertiary}
-                value={fullName}
-                onChangeText={setFullName}
-                autoCapitalize="words"
+              <InlineDropdown
+                value={zodiacType}
+                options={['western', 'chinese']}
+                labels={['Western (Zodiac)', 'Chinese (Zodiac)']}
+                onSelect={handleZodiacTypeSelect}
               />
-
-              {/* Zodiac Type picker */}
-              <Pressable style={styles.picker} onPress={() => setTypePickerOpen(true)}>
-                <Text style={styles.pickerText}>
-                  {zodiacType === 'western' ? 'Western (Zodiac)' : 'Chinese (Zodiac)'}
-                </Text>
-                <Text style={styles.pickerChevron}>▼</Text>
-              </Pressable>
-
-              {/* Zodiac Sign picker */}
-              <Pressable style={styles.picker} onPress={() => setSignPickerOpen(true)}>
-                <Text style={[styles.pickerText, !zodiacSign && styles.pickerPlaceholder]}>
-                  {zodiacSign || 'Select your sign...'}
-                </Text>
-                <Text style={styles.pickerChevron}>▼</Text>
-              </Pressable>
+              <InlineDropdown
+                value={zodiacSign}
+                options={zodiacSigns}
+                labels={zodiacSignLabels}
+                placeholder="Your Sign..."
+                onSelect={setZodiacSign}
+              />
             </>
-          )}
-
-          {/* Status */}
-          {status && (
-            <Text style={[styles.status, status.isError ? styles.statusError : styles.statusOk]}>
-              {status.text}
-            </Text>
           )}
 
           {/* Submit */}
@@ -202,45 +251,38 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color={Colors.textPrimary} />
             ) : (
-              <Text style={styles.submitText}>
-                {isSignup ? 'Seal your fate...' : 'Enter if you dare...'}
-              </Text>
+              <Text style={styles.submitText}>Enter if you dare...</Text>
             )}
           </Pressable>
 
-          {/* Toggle mode */}
-          <Pressable style={styles.linkBtn} onPress={switchMode}>
-            <Text style={styles.linkText}>
-              {isSignup ? 'Already cursed? Sign in...' : 'No account? Join the cursed...'}
-            </Text>
-          </Pressable>
-
-          {/* Forgot password — login mode only */}
+          {/* Toggle mode + forgot — login only */}
           {!isSignup && (
-            <Pressable style={styles.linkBtn} onPress={openForgotModal}>
-              <Text style={styles.forgotText}>Forgot your password? Reset it here</Text>
-            </Pressable>
+            <>
+              <Pressable
+                style={[styles.linkBtn, hoveredLink === 'signup' && styles.linkBtnHovered]}
+                onPress={switchMode}
+                {...hoverProps('signup')}
+              >
+                <Text style={styles.linkText}>No account? Join the cursed...</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.linkBtn, hoveredLink === 'forgot' && styles.linkBtnHovered]}
+                onPress={openForgotModal}
+                {...hoverProps('forgot')}
+              >
+                <Text style={styles.forgotText}>Forgot password?</Text>
+              </Pressable>
+            </>
+          )}
+
+          {/* Status */}
+          {status && (
+            <Text style={[styles.status, status.isError ? styles.statusError : styles.statusOk]}>
+              {status.text}
+            </Text>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-
-      {/* Zodiac type picker modal */}
-      <ModalPicker
-        visible={typePickerOpen}
-        title="Choose zodiac system"
-        options={['Western (Zodiac)', 'Chinese (Zodiac)']}
-        onSelect={handleTypeSelect}
-        onClose={() => setTypePickerOpen(false)}
-      />
-
-      {/* Zodiac sign picker modal */}
-      <ModalPicker
-        visible={signPickerOpen}
-        title="Choose your sign"
-        options={zodiacSigns}
-        onSelect={setZodiacSign}
-        onClose={() => setSignPickerOpen(false)}
-      />
 
       {/* Forgot password modal */}
       <Modal
@@ -253,18 +295,20 @@ export default function LoginScreen() {
           <Pressable style={styles.modalBox} onPress={() => {}}>
             <Text style={styles.modalTitle}>Reset Password</Text>
             <Text style={styles.modalBody}>
-              Enter your email address and we'll send you a reset link.
+              Enter your email and we'll send a reset link.
             </Text>
             <TextInput
               style={styles.input}
               placeholder="Email"
-              placeholderTextColor={Colors.textTertiary}
+              placeholderTextColor={Colors.textSecondary}
               value={forgotEmail}
               onChangeText={setForgotEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               autoFocus
+              returnKeyType="go"
+              onSubmitEditing={handleForgotSubmit}
             />
             {forgotStatus && (
               <Text style={[styles.status, forgotStatus.isError ? styles.statusError : styles.statusOk]}>
@@ -279,7 +323,7 @@ export default function LoginScreen() {
               {forgotLoading ? (
                 <ActivityIndicator color={Colors.textPrimary} />
               ) : (
-                <Text style={styles.submitText}>Send Reset Link</Text>
+                <Text style={styles.submitText}>Send link</Text>
               )}
             </Pressable>
             <Pressable style={styles.linkBtn} onPress={() => setForgotOpen(false)}>
@@ -300,21 +344,45 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.header,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  headerLogo: {
+    width: 44,
+    height: 44,
+    marginRight: 8,
+  },
+  headerTitle: {
+    flex: 1,
+    color: Colors.accent,
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+  },
   scroll: {
     flexGrow: 1,
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 24,
     gap: 12,
+    overflow: 'visible',
   },
   logo: {
-    width: 140,
-    height: 140,
+    width: 210,
+    height: 210,
     marginBottom: 8,
-  },
-  logoSmall: {
-    width: 80,
-    height: 80,
   },
   title: {
     fontSize: 28,
@@ -329,8 +397,8 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    maxWidth: 360,
-    height: 50,
+    maxWidth: 300,
+    height: 46,
     borderWidth: 1,
     borderColor: Colors.primary,
     borderRadius: 8,
@@ -341,10 +409,10 @@ const styles = StyleSheet.create({
   },
   passwordRow: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 300,
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
+    height: 46,
     borderWidth: 1,
     borderColor: Colors.primary,
     borderRadius: 8,
@@ -362,40 +430,10 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
   },
-  eyeText: {
-    color: Colors.textTertiary,
-    fontSize: 11,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  picker: {
-    width: '100%',
-    maxWidth: 360,
-    height: 50,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    backgroundColor: Colors.card,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  pickerText: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-  },
-  pickerPlaceholder: {
-    color: Colors.textTertiary,
-  },
-  pickerChevron: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
   status: {
     fontSize: 13,
     textAlign: 'center',
-    maxWidth: 360,
+    maxWidth: 300,
   },
   statusError: {
     color: Colors.error,
@@ -405,10 +443,10 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     width: '100%',
-    maxWidth: 360,
-    height: 50,
+    maxWidth: 300,
+    height: 44,
     backgroundColor: Colors.primary,
-    borderRadius: 8,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
@@ -418,24 +456,24 @@ const styles = StyleSheet.create({
   },
   submitText: {
     color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '600',
   },
   linkBtn: {
-    paddingVertical: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+  },
+  linkBtnHovered: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
   },
   linkText: {
     color: Colors.accent,
     fontSize: 13,
   },
-  linkTextDim: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
   forgotText: {
-    color: Colors.textSecondary,
+    color: '#555555',
     fontSize: 12,
-    textDecorationLine: 'underline',
   },
   modalOverlay: {
     flex: 1,

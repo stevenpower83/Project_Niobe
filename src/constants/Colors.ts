@@ -1,8 +1,9 @@
 export const Colors = {
-  background: '#07000d',
+  background: '#0d0d0d',
+  header: '#1a0000',
   card: '#120000',
   primary: '#700000',
-  accent: '#A01800',
+  accent: '#CC2200',
   border: '#2a0000',
   borderActive: '#700000',
   textPrimary: '#DDDDDD',

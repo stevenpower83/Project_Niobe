@@ -11,6 +11,7 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.powrdata.horroscope",
       "adaptiveIcon": {
         "backgroundColor": "#1a0000",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

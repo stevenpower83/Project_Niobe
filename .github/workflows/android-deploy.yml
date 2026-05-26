@@ -37,12 +37,20 @@ jobs:
             --platform android \
             --non-interactive \
             --wait \
-            --json 2>/dev/null)
-          ARTIFACT_URL=$(echo "$BUILD_JSON" | jq -r '.[0].artifacts.buildUrl // .[0].artifacts.applicationArchiveUrl')
+            --json)
+          ARTIFACT_URL=$(echo "$BUILD_JSON" | jq -r '
+            if type == "array"
+            then .[0].artifacts.buildUrl // .[0].artifacts.applicationArchiveUrl // empty
+            else .artifacts.buildUrl // .artifacts.applicationArchiveUrl // empty
+            end
+          ')
           echo "artifact-url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
       - name: Download AAB
-        run: curl -L "${{ steps.eas-build.outputs.artifact-url }}" -o build.aab
+        run: curl -fL "${{ steps.eas-build.outputs.artifact-url }}" -o build.aab
 
       - name: Upload to Google Play (internal testing)
         uses: r0adkll/upload-google-play@v1

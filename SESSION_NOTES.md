@@ -15,7 +15,7 @@
 | `.env.example` | Documents required env vars (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`) |
 | `src/services/supabase.ts` | Supabase client with `expo-secure-store` JWT storage adapter |
 | `src/services/auth.ts` | signUp / signIn / signOut / resetPassword — thin wrappers over Supabase auth |
-| `src/services/horoscope.ts` | getHoroscope / refreshHoroscope — mirrors Python caching/fetch logic exactly |
+| `src/services/horoscope.ts` | getHoroscope / refreshHoroscope — daily caching with stale fallback |
 | `src/constants/Colors.ts` | Design token palette (dark red gothic theme) |
 | `src/constants/Zodiacs.ts` | Western/Chinese sign maps, emoji lookup, ZodiacType type |
 | `src/components/StyledCard.tsx` | Dark card container with red border |
@@ -30,6 +30,7 @@
 | Workflow | Trigger | Action |
 |----------|---------|--------|
 | `ci.yml` | Push to main or PR to main | TypeScript check + expo lint |
+| `android-deploy.yml` | Push to main | EAS production AAB build + Google Play internal upload |
 | `eas-build-preview.yml` | Push to main | EAS preview Android APK |
 | `eas-build-release.yml` | Push to `release/**` | EAS production AAB (Android) + IPA (iOS) |
 
@@ -51,7 +52,7 @@
 5. **Android keystore** — EAS manages this automatically on first production build (or use `eas credentials --platform android`).
 
 ### Nice-to-have
-- Replace the `💀` emoji logo placeholder in `src/app/index.tsx` with the actual `logo_2048.png` / `logo_512.png` images from App_Test assets. Copy them to `assets/images/` and switch the `<View>` for an `<Image>` component.
+- ~~Replace the logo placeholder~~ ✓ Done — real app logo images in place.
 - Add `expo-linking` deep link handler for the password reset redirect URL (`horroscope://reset-password`) so users land back in the app after clicking the email link.
 - Wire up Expo Notifications / OneSignal for the daily prophecy push (the `notifications_enabled` DB column and toggle UI are already in place).
 - Add `package-lock.json` to `.gitignore` if you prefer not to commit lockfile (currently committed; fine either way).

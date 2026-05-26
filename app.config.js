@@ -7,7 +7,7 @@ export default {
     icon: './assets/images/appicon_1254.png',
     scheme: 'horroscope',
     userInterfaceStyle: 'dark',
-    backgroundColor: '#07000d',
+    backgroundColor: '#0d0d0d',
     ios: {
       bundleIdentifier: 'com.powrdata.horroscope',
       icon: './assets/expo.icon',
@@ -15,7 +15,7 @@ export default {
     android: {
       package: 'com.powrdata.horroscope',
       adaptiveIcon: {
-        backgroundColor: '#07000d',
+        backgroundColor: '#1a0000',
         foregroundImage: './assets/images/android-icon-foreground.png',
         backgroundImage: './assets/images/android-icon-background.png',
         monochromeImage: './assets/images/android-icon-monochrome.png',
@@ -32,7 +32,7 @@ export default {
       [
         'expo-splash-screen',
         {
-          backgroundColor: '#07000d',
+          backgroundColor: '#0d0d0d',
           android: {
             image: './assets/images/logo_512.png',
             imageWidth: 200,

@@ -10,7 +10,7 @@ export default {
     backgroundColor: '#0d0d0d',
     ios: {
       bundleIdentifier: 'com.powrdata.horroscope',
-      icon: './assets/expo.icon',
+      icon: './assets/images/appicon_1254.png',
     },
     android: {
       package: 'com.powrdata.horroscope',

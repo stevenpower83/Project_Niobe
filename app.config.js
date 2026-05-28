@@ -11,6 +11,9 @@ export default {
     ios: {
       bundleIdentifier: 'com.powrdata.horroscope',
       icon: './assets/images/appicon_1254.png',
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       package: 'com.powrdata.horroscope',

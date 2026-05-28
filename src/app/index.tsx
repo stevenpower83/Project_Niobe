@@ -289,6 +289,7 @@ export default function LoginScreen() {
         visible={forgotOpen}
         transparent
         animationType="fade"
+        supportedOrientations={['portrait']}
         onRequestClose={() => setForgotOpen(false)}
       >
         <Pressable style={styles.modalOverlay} onPress={() => setForgotOpen(false)}>

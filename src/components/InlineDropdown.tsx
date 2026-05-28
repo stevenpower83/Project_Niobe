@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Keyboard } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Keyboard, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 
@@ -34,18 +34,24 @@ export function InlineDropdown({ value, options, labels, placeholder, onSelect }
       </Pressable>
       {open && (
         <View style={styles.list}>
-          {options.map((opt, i) => (
-            <Pressable
-              key={opt}
-              style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
-              onPress={() => {
-                onSelect(opt);
-                setOpen(false);
-              }}
-            >
-              <Text style={styles.optionText}>{displayLabels[i]}</Text>
-            </Pressable>
-          ))}
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            style={styles.scroll}
+            showsVerticalScrollIndicator={false}
+          >
+            {options.map((opt, i) => (
+              <Pressable
+                key={opt}
+                style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
+                onPress={() => {
+                  onSelect(opt);
+                  setOpen(false);
+                }}
+              >
+                <Text style={styles.optionText}>{displayLabels[i]}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
       )}
     </View>
@@ -90,12 +96,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
+    maxHeight: 260,
     borderWidth: 1,
     borderTopWidth: 0,
     borderColor: '#3a3030',
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
     backgroundColor: '#1e1a1a',
+    overflow: 'hidden',
+  },
+  scroll: {
+    flexGrow: 0,
   },
   option: {
     paddingHorizontal: 16,

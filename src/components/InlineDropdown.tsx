@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 
@@ -21,7 +21,7 @@ export function InlineDropdown({ value, options, labels, placeholder, onSelect }
     <View style={[styles.wrapper, open && styles.wrapperOpen]}>
       <Pressable
         style={[styles.trigger, open && styles.triggerOpen]}
-        onPress={() => setOpen((v) => !v)}
+        onPress={() => { Keyboard.dismiss(); setOpen((v) => !v); }}
       >
         <Text style={[styles.triggerText, !selectedLabel && styles.placeholder]}>
           {selectedLabel ?? placeholder ?? ''}

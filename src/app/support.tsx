@@ -20,7 +20,7 @@ import { supabase } from '../services/supabase';
 import { HeaderIconBtn } from '../components/HeaderIconBtn';
 
 const FEEDBACK_URL = 'https://tally.so/r/OD8ZDa';
-const POWRDATA_URL = 'https://powrdata.com.au'; // update to specific page when ready
+const POWRDATA_URL = 'https://www.powrdata.com.au/horroscope';
 const APPSTORE_URL = 'https://apps.apple.com/app/id6773741555';
 const PLAYSTORE_URL = 'https://play.google.com/store/apps/details?id=com.powrdata.horroscope';
 const DELETE_URL = 'https://tally.so/r/81jYol';

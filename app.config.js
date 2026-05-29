@@ -26,7 +26,7 @@ export default {
       predictiveBackGestureEnabled: false,
     },
     web: {
-      output: 'spa',
+      output: 'static',
       favicon: './assets/images/favicon.png',
     },
     plugins: [

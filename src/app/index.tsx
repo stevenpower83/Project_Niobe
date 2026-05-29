@@ -292,46 +292,51 @@ export default function LoginScreen() {
         supportedOrientations={['portrait']}
         onRequestClose={() => setForgotOpen(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setForgotOpen(false)}>
-          <Pressable style={styles.modalBox} onPress={() => {}}>
-            <Text style={styles.modalTitle}>Reset Password</Text>
-            <Text style={styles.modalBody}>
-              Enter your email and we'll send a reset link.
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={Colors.textSecondary}
-              value={forgotEmail}
-              onChangeText={setForgotEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoFocus
-              returnKeyType="go"
-              onSubmitEditing={handleForgotSubmit}
-            />
-            {forgotStatus && (
-              <Text style={[styles.status, forgotStatus.isError ? styles.statusError : styles.statusOk]}>
-                {forgotStatus.text}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setForgotOpen(false)}>
+            <Pressable style={styles.modalBox} onPress={() => {}}>
+              <Text style={styles.modalTitle}>Reset Password</Text>
+              <Text style={styles.modalBody}>
+                Enter your email and we'll send a reset link.
               </Text>
-            )}
-            <Pressable
-              style={({ pressed }) => [styles.submitBtn, pressed && styles.submitBtnPressed]}
-              onPress={handleForgotSubmit}
-              disabled={forgotLoading}
-            >
-              {forgotLoading ? (
-                <ActivityIndicator color={Colors.textPrimary} />
-              ) : (
-                <Text style={styles.submitText}>Send link</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor={Colors.textSecondary}
+                value={forgotEmail}
+                onChangeText={setForgotEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+                returnKeyType="go"
+                onSubmitEditing={handleForgotSubmit}
+              />
+              {forgotStatus && (
+                <Text style={[styles.status, forgotStatus.isError ? styles.statusError : styles.statusOk]}>
+                  {forgotStatus.text}
+                </Text>
               )}
-            </Pressable>
-            <Pressable style={styles.linkBtn} onPress={() => setForgotOpen(false)}>
-              <Text style={styles.linkText}>Cancel</Text>
+              <Pressable
+                style={({ pressed }) => [styles.submitBtn, pressed && styles.submitBtnPressed]}
+                onPress={handleForgotSubmit}
+                disabled={forgotLoading}
+              >
+                {forgotLoading ? (
+                  <ActivityIndicator color={Colors.textPrimary} />
+                ) : (
+                  <Text style={styles.submitText}>Send link</Text>
+                )}
+              </Pressable>
+              <Pressable style={styles.linkBtn} onPress={() => setForgotOpen(false)}>
+                <Text style={styles.linkText}>Cancel</Text>
+              </Pressable>
             </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

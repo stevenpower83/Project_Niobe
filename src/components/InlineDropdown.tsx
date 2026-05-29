@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Keyboard, ScrollView } from 'react-native';
+import { useState, useRef } from 'react';
+import { View, Text, Pressable, StyleSheet, Keyboard, ScrollView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 
@@ -9,51 +9,84 @@ interface Props {
   labels?: string[];
   placeholder?: string;
   onSelect: (value: string) => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function InlineDropdown({ value, options, labels, placeholder, onSelect }: Props) {
+export function InlineDropdown({ value, options, labels, placeholder, onSelect, onOpenChange }: Props) {
   const [open, setOpen] = useState(false);
+  const [triggerLayout, setTriggerLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const triggerRef = useRef<View>(null);
   const displayLabels = labels ?? options;
   const idx = options.indexOf(value);
   const selectedLabel = idx >= 0 ? displayLabels[idx] : null;
 
+  function handleOpen() {
+    Keyboard.dismiss();
+    triggerRef.current?.measureInWindow((x, y, width, height) => {
+      setTriggerLayout({ x, y, width, height });
+      setOpen(true);
+      onOpenChange?.(true);
+    });
+  }
+
+  function handleClose() {
+    setOpen(false);
+    onOpenChange?.(false);
+  }
+
   return (
-    <View style={[styles.wrapper, open && styles.wrapperOpen]}>
-      <Pressable
-        style={[styles.trigger, open && styles.triggerOpen]}
-        onPress={() => { Keyboard.dismiss(); setOpen((v) => !v); }}
-      >
-        <Text style={[styles.triggerText, !selectedLabel && styles.placeholder]}>
-          {selectedLabel ?? placeholder ?? ''}
-        </Text>
-        <Ionicons
-          name={open ? 'chevron-up-outline' : 'chevron-down-outline'}
-          size={16}
-          color={Colors.textSecondary}
-        />
-      </Pressable>
-      {open && (
-        <View style={styles.list}>
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            style={styles.scroll}
-            showsVerticalScrollIndicator={false}
+    <View style={styles.wrapper}>
+      <View ref={triggerRef} collapsable={false}>
+        <Pressable
+          style={[styles.trigger, open && styles.triggerOpen]}
+          onPress={handleOpen}
+        >
+          <Text style={[styles.triggerText, !selectedLabel && styles.placeholder]}>
+            {selectedLabel ?? placeholder ?? ''}
+          </Text>
+          <Ionicons
+            name={open ? 'chevron-up-outline' : 'chevron-down-outline'}
+            size={16}
+            color={Colors.textSecondary}
+          />
+        </Pressable>
+      </View>
+
+      <Modal visible={open} transparent animationType="none" onRequestClose={handleClose}>
+        <Pressable style={styles.overlay} onPress={handleClose}>
+          <Pressable
+            style={[
+              styles.list,
+              triggerLayout ? {
+                position: 'absolute',
+                top: triggerLayout.y + triggerLayout.height,
+                left: triggerLayout.x,
+                width: triggerLayout.width,
+              } : {},
+            ]}
+            onPress={() => {}}
           >
-            {options.map((opt, i) => (
-              <Pressable
-                key={opt}
-                style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
-                onPress={() => {
-                  onSelect(opt);
-                  setOpen(false);
-                }}
-              >
-                <Text style={styles.optionText}>{displayLabels[i]}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={true}
+              style={styles.scroll}
+            >
+              {options.map((opt, i) => (
+                <Pressable
+                  key={opt}
+                  style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
+                  onPress={() => {
+                    onSelect(opt);
+                    handleClose();
+                  }}
+                >
+                  <Text style={styles.optionText}>{displayLabels[i]}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -62,10 +95,6 @@ const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
     maxWidth: 300,
-    zIndex: 1,
-  },
-  wrapperOpen: {
-    zIndex: 100,
   },
   trigger: {
     height: 46,
@@ -90,12 +119,10 @@ const styles = StyleSheet.create({
   placeholder: {
     color: Colors.textTertiary,
   },
+  overlay: {
+    flex: 1,
+  },
   list: {
-    position: 'absolute',
-    top: 46,
-    left: 0,
-    right: 0,
-    zIndex: 100,
     maxHeight: 260,
     borderWidth: 1,
     borderTopWidth: 0,
@@ -106,7 +133,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   scroll: {
-    flexGrow: 0,
+    maxHeight: 260,
   },
   option: {
     paddingHorizontal: 16,

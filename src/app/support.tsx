@@ -20,7 +20,9 @@ import { supabase } from '../services/supabase';
 import { HeaderIconBtn } from '../components/HeaderIconBtn';
 
 const FEEDBACK_URL = 'https://tally.so/r/OD8ZDa';
-const DONATION_URL = 'https://ko-fi.com/stevenpower';
+const POWRDATA_URL = 'https://powrdata.com.au'; // update to specific page when ready
+const APPSTORE_URL = 'https://apps.apple.com/app/id6773741555';
+const PLAYSTORE_URL = 'https://play.google.com/store/apps/details?id=com.powrdata.horroscope';
 const DELETE_URL = 'https://tally.so/r/81jYol';
 
 
@@ -29,7 +31,7 @@ export default function SupportScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [hoveredSuffering, setHoveredSuffering] = useState(false);
-  const [hoveredDeveloper, setHoveredDeveloper] = useState(false);
+  const [hoveredRate, setHoveredRate] = useState(false);
   const hoverProps = (setter: (v: boolean) => void) =>
     Platform.OS === 'web'
       ? { onPointerEnter: () => setter(true), onPointerLeave: () => setter(false) }
@@ -135,19 +137,19 @@ export default function SupportScreen() {
 
         <View style={styles.divider} />
 
-        {/* Donation */}
+        {/* Rate the app */}
         <Pressable
           style={({ pressed }) => [
             styles.actionBtn,
             styles.actionBtnOutline,
-            (hoveredDeveloper || pressed) && styles.actionBtnOutlineHovered,
+            (hoveredRate || pressed) && styles.actionBtnOutlineHovered,
           ]}
-          onPress={() => openUrl(DONATION_URL)}
-          {...hoverProps(setHoveredDeveloper)}
+          onPress={() => openUrl(Platform.OS === 'ios' ? APPSTORE_URL : PLAYSTORE_URL)}
+          {...hoverProps(setHoveredRate)}
         >
-          <Text style={styles.actionBtnOutlineText}>🩸 Feed the Developer</Text>
+          <Text style={styles.actionBtnOutlineText}>⭐ Rate the App</Text>
         </Pressable>
-        <Text style={styles.hint}>Keep the dark arts alive with a small donation</Text>
+        <Text style={styles.hint}>Leave a review and help others find the darkness</Text>
 
         <View style={styles.divider} />
 
@@ -176,6 +178,11 @@ export default function SupportScreen() {
         {/* Delete account */}
         <Pressable style={styles.deleteBtn} onPress={() => openUrl(DELETE_URL)}>
           <Text style={styles.deleteText}>Delete My Account</Text>
+        </Pressable>
+
+        {/* PowerData credit */}
+        <Pressable style={styles.creditBtn} onPress={() => openUrl(POWRDATA_URL)}>
+          <Text style={styles.creditText}>Built by PowerData · powrdata.com.au</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -325,5 +332,14 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     fontSize: 12,
     textDecorationLine: 'underline',
+  },
+  creditBtn: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingBottom: 16,
+  },
+  creditText: {
+    color: '#4a3333',
+    fontSize: 11,
   },
 });

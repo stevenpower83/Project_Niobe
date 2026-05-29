@@ -19,8 +19,7 @@ export default {
       package: 'com.powrdata.horroscope',
       adaptiveIcon: {
         backgroundColor: '#1a0000',
-        foregroundImage: './assets/images/android-icon-foreground.png',
-        backgroundImage: './assets/images/android-icon-background.png',
+        foregroundImage: './assets/images/logo_1024.png',
         monochromeImage: './assets/images/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: false,

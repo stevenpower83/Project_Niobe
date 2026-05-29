@@ -81,6 +81,7 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-compiler/react-compiler
     loadData();
   }, [loadData]);
 

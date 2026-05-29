@@ -1,0 +1,130 @@
+name: iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Which phase to run'
+        required: true
+        type: choice
+        default: build-and-deploy
+        options:
+          - build-and-deploy
+          - build-only
+          - deploy-only
+      build_id:
+        description: 'EAS build ID — required when action is deploy-only'
+        required: false
+        type: string
+      submit_profile:
+        description: 'EAS submit profile (TestFlight or App Store)'
+        required: false
+        type: choice
+        default: production
+        options:
+          - production
+
+concurrency:
+  group: ios
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build IPA (EAS cloud)
+    if: github.event.inputs.action != 'deploy-only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+    outputs:
+      build-id: ${{ steps.eas-build.outputs.build-id }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@8.2.1
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS IPA (EAS cloud)
+        id: eas-build
+        run: |
+          BUILD_JSON=$(eas build \
+            --profile production \
+            --platform ios \
+            --non-interactive \
+            --wait \
+            --json)
+          BUILD_ID=$(echo "$BUILD_JSON" | jq -r '
+            if type == "array" then .[0].id else .id end
+          ')
+          echo "build-id=$BUILD_ID" >> $GITHUB_OUTPUT
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+  deploy:
+    name: Submit to App Store Connect
+    needs: build
+    if: |
+      always() &&
+      github.event.inputs.action != 'build-only' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@8.2.1
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Resolve build ID
+        id: resolve
+        run: |
+          if [ "${{ github.event.inputs.action }}" = "deploy-only" ]; then
+            BUILD_ID="${{ github.event.inputs.build_id }}"
+          else
+            BUILD_ID="${{ needs.build.outputs.build-id }}"
+          fi
+          if [ -z "$BUILD_ID" ]; then
+            echo "::error::No build ID available — provide build_id when using deploy-only"
+            exit 1
+          fi
+          echo "build-id=$BUILD_ID" >> $GITHUB_OUTPUT
+
+      - name: Submit to App Store Connect
+        run: |
+          eas submit \
+            --platform ios \
+            --profile ${{ github.event.inputs.submit_profile || 'production' }} \
+            --id ${{ steps.resolve.outputs.build-id }} \
+            --non-interactive
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

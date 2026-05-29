@@ -1,21 +1,48 @@
-name: Android — Build & Deploy
+name: Android
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      action:
+        description: 'Which phase to run'
+        required: true
+        type: choice
+        default: build-and-deploy
+        options:
+          - build-and-deploy
+          - build-only
+          - deploy-only
+      artifact_url:
+        description: 'EAS artifact URL — required when action is deploy-only'
+        required: false
+        type: string
+      track:
+        description: 'Play Store track'
+        required: false
+        type: choice
+        default: internal
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
 
 concurrency:
-  group: android-deploy
+  group: android
   cancel-in-progress: false
 
 jobs:
   build:
     name: Build AAB (EAS cloud)
+    if: github.event_name == 'push' || github.event.inputs.action != 'deploy-only'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+    outputs:
+      artifact-url: ${{ steps.eas-build.outputs.artifact-url }}
 
     steps:
       - name: Checkout
@@ -56,19 +83,13 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
-      - name: Download AAB from EAS
-        run: curl -fL "${{ steps.eas-build.outputs.artifact-url }}" -o build.aab
-
-      - name: Store AAB as workflow artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: android-release
-          path: build.aab
-          retention-days: 7
-
   deploy:
-    name: Upload to Google Play (internal testing)
+    name: Deploy to Google Play (${{ github.event.inputs.track || 'internal' }})
     needs: build
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event.inputs.action != 'build-only') &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -76,17 +97,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Download AAB
-        uses: actions/download-artifact@v8
-        with:
-          name: android-release
+      - name: Resolve artifact URL
+        id: resolve
+        run: |
+          if [ "${{ github.event.inputs.action }}" = "deploy-only" ]; then
+            URL="${{ github.event.inputs.artifact_url }}"
+          else
+            URL="${{ needs.build.outputs.artifact-url }}"
+          fi
+          if [ -z "$URL" ]; then
+            echo "::error::No artifact URL available — provide artifact_url when using deploy-only"
+            exit 1
+          fi
+          echo "url=$URL" >> $GITHUB_OUTPUT
 
-      - name: Upload to Google Play (internal testing)
+      - name: Download AAB
+        run: curl -fL "${{ steps.resolve.outputs.url }}" -o build.aab
+
+      - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.powrdata.horroscope
           releaseFiles: build.aab
-          track: internal
+          track: ${{ github.event.inputs.track || 'internal' }}
           status: completed
           whatsNewDirectory: whatsnew

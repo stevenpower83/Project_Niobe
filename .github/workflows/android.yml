@@ -69,6 +69,7 @@ jobs:
           BUILD_JSON=$(eas build \
             --profile production \
             --platform android \
+            --environment production \
             --non-interactive \
             --wait \
             --json)

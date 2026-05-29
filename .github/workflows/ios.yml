@@ -64,6 +64,7 @@ jobs:
           BUILD_JSON=$(eas build \
             --profile production \
             --platform ios \
+            --environment production \
             --non-interactive \
             --wait \
             --json)
